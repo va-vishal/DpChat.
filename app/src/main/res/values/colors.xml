@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="light_blue_600">#E04DEA</color>
+    <color name="light_blue_900">#FF01579B</color>
+    <color name="light_blue_A200">#FF40C4FF</color>
+    <color name="light_blue_A400">#FF00B0FF</color>
+    <color name="black_overlay">#66000000</color>
+    <color name="colorPrimary">#66000000</color>
+    <color name="semi_transparent_black">#14000000</color>
+    <color name="Msg">#FFFFFF</color>
+    <color name="color1">#2ECC71</color>
+    <color name="color2">#160770</color>
+    <color name="color3">#0099C9</color>
+
+
+</resources>

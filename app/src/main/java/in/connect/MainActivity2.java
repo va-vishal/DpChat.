@@ -29,8 +29,10 @@ import java.util.HashMap;
 import de.hdodenhof.circleimageview.CircleImageView;
 import in.connect.Fragment.ChatsFragment;
 import in.connect.Fragment.UsersFragment;
+import in.connect.Model.Chat;
+import in.connect.Model.User;
 
-public class MessageActivity2 extends AppCompatActivity {
+public class MainActivity2 extends AppCompatActivity {
 
     CircleImageView profile_image;
     TextView username;
@@ -60,34 +62,53 @@ public class MessageActivity2 extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 User user = dataSnapshot.getValue(User.class);
-                username.setText(user.getUsername());
-                if (user.getImageurl().equals("default")) {
-                    profile_image.setImageResource(R.mipmap.ic_launcher);
-                } else {
-                    Glide.with(MessageActivity2.this).load(user.getImageurl()).into(profile_image);
+                if (user != null) {
+                    username.setText(user.getUsername());
+                    if ("default".equals(user.getImageurl())) {
+                        profile_image.setImageResource(R.mipmap.ic_launcher);
+                    } else {
+                        Glide.with(getApplicationContext()).load(user.getImageurl()).into(profile_image);
+                    }
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                // Handle database error
             }
         });
 
-        // ViewPager and TabLayout setup
-        ViewPager viewPager = findViewById(R.id.view_pager);
-        TabLayout tabLayout = findViewById(R.id.tab_layout);
-        ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
+        reference = FirebaseDatabase.getInstance().getReference("Chats");
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ViewPagerAdapter viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
+                int unread = 0;
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Chat chat = snapshot.getValue(Chat.class);
+                    if (chat != null && chat.getReceiver().equals(firebaseUser.getUid()) && !chat.isIsseen()) {
+                        unread++;
+                    }
+                }
+                if (unread == 0) {
+                    viewPagerAdapter.addFragment(new ChatsFragment(), "Chats");
+                } else {
+                    viewPagerAdapter.addFragment(new ChatsFragment(), "(" + unread + ") Chats");
+                }
+                viewPagerAdapter.addFragment(new UsersFragment(), "Users");
 
-        // Add fragments to the ViewPager
-        viewPagerAdapter.addFragment(new ChatsFragment(), "Chats");
-        viewPagerAdapter.addFragment(new UsersFragment(), "Users");
+                ViewPager viewPager = findViewById(R.id.view_pager);
+                TabLayout tabLayout = findViewById(R.id.tab_layout);
 
-        // Set the adapter for the ViewPager
-        viewPager.setAdapter(viewPagerAdapter);
+                viewPager.setAdapter(viewPagerAdapter);
+                tabLayout.setupWithViewPager(viewPager);
+            }
 
-        // Connect the TabLayout with the ViewPager
-        tabLayout.setupWithViewPager(viewPager);
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle database error
+            }
+        });
     }
 
     @Override
@@ -100,8 +121,7 @@ public class MessageActivity2 extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.logout) {
             FirebaseAuth.getInstance().signOut();
-            startActivity(new Intent(MessageActivity2.this, MainActivity.class));
-            finish();
+            startActivity(new Intent(MainActivity2.this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -138,6 +158,7 @@ public class MessageActivity2 extends AppCompatActivity {
             return titles.get(position);
         }
     }
+
     private void status(String status) {
         reference = FirebaseDatabase.getInstance().getReference("Users").child(firebaseUser.getUid());
         HashMap<String, Object> hashMap = new HashMap<>();
@@ -156,5 +177,4 @@ public class MessageActivity2 extends AppCompatActivity {
         super.onPause();
         status("offline");
     }
-}
 }
